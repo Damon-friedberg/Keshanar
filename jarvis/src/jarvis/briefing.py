@@ -21,6 +21,9 @@ BRIEFING_PROMPT = """Produce my morning briefing. Use your tools to gather:
 
 Then write a tight, friendly spoken-style summary (under ~200 words). End with
 one suggested focus for the day. Save nothing that needs sending; just report.
+
+Finally, reflect: if you noticed any durable new facts or preferences about me
+today, update your memory (memory tools) so you know me better tomorrow.
 """
 
 

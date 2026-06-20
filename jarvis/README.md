@@ -105,6 +105,24 @@ Everything lands locally in `vault/`: `tasks.md`, `todos.md`, `customers.md`, an
 `knowledge/<topic>.md`. Nothing is sent anywhere. (Optional next step: push these
 into Graphiti memory or Notion via the agent.)
 
+## Learns you & adapts
+
+Jarvis gets to know you and tailors itself over time — two tiers:
+
+- **Profile** (`profile.py` → `vault/profile.md`): a compact summary of your
+  identity, preferences, communication style, the people and projects in your
+  world, and your do's/don'ts. It's injected into **every turn**, so Jarvis adapts
+  immediately. Say things like *"call me Cap,"* *"I prefer short answers,"* *"from
+  now on default to metric,"* *"remember Dana is the Acme contact"* — it captures
+  them on the spot. Corrections stick too.
+- **Deep memory** (Graphiti / basic-memory MCP): the evolving, time-aware
+  knowledge graph the agent reads/writes via tools for the long tail — *what's true
+  and when it changed.*
+- **Consolidation:** the nightly briefing reflects on the day and updates both,
+  and successful workflows get written to `skills/`.
+
+Your profile lives in `vault/` (gitignored — it never leaves your machine).
+
 ## Overnight briefing
 
 `briefing.py` is meant to be run unattended (Claude Code Routines in the cloud,

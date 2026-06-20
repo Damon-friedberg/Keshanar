@@ -7,8 +7,12 @@ Open the orb separately: ui/orb/index.html
 """
 import asyncio
 
-from . import capture, config, hud, vision, voice
+from . import capture, config, hud, profile, vision, voice
 from .agent import run_turn
+
+# phrases that mean "learn something durable about me"
+_LEARN = ("remember", "i prefer", "from now on", "call me", "note about me",
+          "i like", "i don't like", "i hate", "my name is", "fyi")
 
 # phrases that start a multi-step "walk me through it" capture
 _SESSION = ("start capture", "capture session", "capture mode")
@@ -69,6 +73,11 @@ async def loop() -> None:
             continue
 
         print(f"you> {user_text}")
+        if any(k in low for k in _LEARN):
+            try:
+                profile.learn(user_text)          # adapt to you, then answer
+            except Exception as e:                # noqa: BLE001
+                print(f"[profile] learn skipped ({e})")
         hud.set_state("thinking")
         reply = await run_turn(user_text)
         print(f"jarvis> {reply}")

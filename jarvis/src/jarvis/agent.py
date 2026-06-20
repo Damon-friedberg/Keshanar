@@ -23,7 +23,7 @@ from claude_agent_sdk import (  # type: ignore
     query,
 )
 
-from . import config
+from . import config, profile
 from .approval import confirm, is_destructive, requires_approval
 from .router import choose_model
 
@@ -56,7 +56,8 @@ async def _ask(prompt: str, model: str, allow_escalate: bool) -> str:
     global _session_id
     kwargs = dict(
         model=model,
-        system_prompt=config.SYSTEM_PROMPT + (_ESCALATE_HINT if allow_escalate else ""),
+        system_prompt=(config.SYSTEM_PROMPT + profile.prompt()
+                       + (_ESCALATE_HINT if allow_escalate else "")),
         mcp_servers=_servers(),
         permission_mode="default",       # so can_use_tool is actually invoked
         can_use_tool=_can_use_tool,
