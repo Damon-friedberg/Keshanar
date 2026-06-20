@@ -91,6 +91,20 @@ Jarvis and Claude Code share the exact same tool loadout.
 > it would bloat Jarvis. **Core direct + catalog-via-gateway** is the sane setup
 > for both.
 
+## Capture: talk + show your screen → tasks, to-dos, knowledge
+
+Talk out loud while showing Jarvis your screen (customers, work, what you need to
+do); it watches **and** listens, then compiles everything into structured items.
+
+- Say **"start capture"** for a walkthrough — narrate step by step, Jarvis grabs
+  the screen each time, say **"done"** and it compiles one tidy set.
+- Say **"capture this" / "log this" / "make tasks"** for a single screen+voice
+  snapshot.
+
+Everything lands locally in `vault/`: `tasks.md`, `todos.md`, `customers.md`, and
+`knowledge/<topic>.md`. Nothing is sent anywhere. (Optional next step: push these
+into Graphiti memory or Notion via the agent.)
+
 ## Overnight briefing
 
 `briefing.py` is meant to be run unattended (Claude Code Routines in the cloud,
