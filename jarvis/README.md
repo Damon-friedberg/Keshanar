@@ -53,9 +53,11 @@ Change the patterns in `approval.py` to widen or narrow the gate.
 ## Setup (Windows)
 
 ```powershell
-# 1. Python deps
+# 1. Python deps (core = text mode; add extras for voice/screen/orb)
 py -m venv .venv; .\.venv\Scripts\activate
-pip install -r requirements.txt
+pip install -e .
+#    later, for the full experience:
+#    pip install -e ".[voice,capture,hud]"
 
 # 2. Node tools used by several MCP servers
 #    (Desktop Commander, Terminator, Playwright, Screenpipe run via npx)

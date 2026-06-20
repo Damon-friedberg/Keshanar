@@ -3,7 +3,24 @@ name = "jarvis-assistant"
 version = "0.1.0"
 description = "A Claude-powered voice assistant for Windows (voice + MCP + computer control)."
 requires-python = ">=3.11"
-dynamic = ["dependencies"]
+dependencies = [
+  "anthropic>=0.40.0",
+  "claude-agent-sdk>=0.2.0",
+  "python-dotenv>=1.0.0",
+]
+
+# Install only what you need:
+#   pip install -e .                      core / text mode (jarvis.chat, jarvis.doctor)
+#   pip install -e ".[voice]"             mic + STT + TTS
+#   pip install -e ".[capture]"           screen capture
+#   pip install -e ".[hud]"               orb websocket bridge
+#   pip install -e ".[voice,capture,hud,dev]"   everything
+[project.optional-dependencies]
+voice = ["faster-whisper>=1.0.0", "sounddevice>=0.4.6", "numpy>=1.26",
+         "webrtcvad-wheels>=2.0.14", "elevenlabs>=1.0.0", "pyttsx3>=2.90"]
+capture = ["mss>=9.0", "Pillow>=10.0"]
+hud = ["websockets>=12.0"]
+dev = ["pytest>=8.0"]
 
 [project.scripts]
 jarvis = "jarvis.main:main"
@@ -15,9 +32,6 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.setuptools.dynamic]
-dependencies = { file = ["requirements.txt"] }
 
 [build-system]
 requires = ["setuptools>=68"]

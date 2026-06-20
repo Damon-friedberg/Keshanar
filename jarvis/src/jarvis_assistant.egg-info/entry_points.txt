@@ -1,0 +1,4 @@
+[console_scripts]
+jarvis = jarvis.main:main
+jarvis-chat = jarvis.chat:main
+jarvis-doctor = jarvis.doctor:main
