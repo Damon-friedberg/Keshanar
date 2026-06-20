@@ -1,75 +1,96 @@
-"""The brain: Claude Agent SDK + MCP loadout + approval gate + self-escalation.
+"""The brain: Claude Agent SDK (corrected to the real API) + MCP + approval gate.
 
-Routing:
-- `choose_model()` sends obviously-heavy turns straight to Opus.
-- For everything else Sonnet runs, but with an escape hatch: if it decides the
-  task needs deeper reasoning it answers `ESCALATE: <reason>` and the turn is
-  re-run on Opus. So Jarvis can upgrade its own brain mid-task.
-
-NOTE: exact Agent SDK names can shift between versions — if an import fails,
-check `claude-agent-sdk` and adjust. The shape is stable.
+Verified against the official Python SDK (claude-agent-sdk >= 0.2.x):
+- Multi-turn via query() + session `resume` (so we can pick the model per turn,
+  which is what makes routing + self-escalation work).
+- permission_mode="default" so our can_use_tool callback actually runs.
+- We deliberately do NOT set allowed_tools=["mcp__*"]: that wildcard AUTO-APPROVES
+  every tool and would BYPASS the gate, so outbound 'send' tools would never be
+  caught. Instead every tool flows through can_use_tool, which allows everything
+  except outbound sends (those ask for approval).
+- Messages are typed objects: AssistantMessage.content -> [TextBlock, ToolUseBlock],
+  end-of-turn is ResultMessage (carries session_id, cost).
 """
 import json
 
 from claude_agent_sdk import (  # type: ignore
+    AssistantMessage,
     ClaudeAgentOptions,
     PermissionResultAllow,
     PermissionResultDeny,
+    ResultMessage,
+    TextBlock,
     query,
 )
 
 from . import config
-from .approval import confirm, requires_approval
+from .approval import confirm, is_destructive, requires_approval
 from .router import choose_model
 
+# Server-side conversation handle; lets each turn continue the same session.
+_session_id: str | None = None
+
 _ESCALATE_HINT = (
-    "\n\nESCALATION: If this request needs deep reasoning (hard coding, "
-    "multi-step research, tricky planning or debugging), do not attempt it now — "
-    "reply with exactly 'ESCALATE: <one-line reason>' and nothing else. "
-    "Otherwise just answer normally."
+    "\n\nESCALATION: If this needs deep reasoning (hard coding, multi-step "
+    "research, tricky planning/debugging), do not attempt it now — reply with "
+    "exactly 'ESCALATE: <one-line reason>' and nothing else. Otherwise answer "
+    "normally."
 )
 
 
-def _load_core_servers() -> dict:
+def _servers() -> dict:
+    # .mcp.json wraps servers under "mcpServers"; the SDK wants the inner mapping.
     return json.loads(config.MCP_CORE.read_text()).get("mcpServers", {})
 
 
-async def _can_use_tool(tool_name, tool_input, context=None):
-    """Allow everything except outbound 'send' actions, which need a yes."""
-    if requires_approval(tool_name, tool_input):
-        if not await confirm(tool_name, tool_input):
-            return PermissionResultDeny(message="User declined the outbound action.")
+async def _can_use_tool(tool_name: str, input_data: dict, context=None):
+    """Allow everything except outbound sends + catastrophic commands (ask first)."""
+    if requires_approval(tool_name, input_data) or is_destructive(tool_name, input_data):
+        if await confirm(tool_name, input_data):
+            return PermissionResultAllow()
+        return PermissionResultDeny(message=f"User declined '{tool_name}'.")
     return PermissionResultAllow()
 
 
-async def _run(prompt: str, model: str, allow_escalate: bool) -> str:
-    options = ClaudeAgentOptions(
+async def _ask(prompt: str, model: str, allow_escalate: bool) -> str:
+    global _session_id
+    kwargs = dict(
         model=model,
         system_prompt=config.SYSTEM_PROMPT + (_ESCALATE_HINT if allow_escalate else ""),
-        mcp_servers=_load_core_servers(),
-        allowed_tools=["mcp__*"],
-        permission_mode="acceptAll",   # looser; the hook still gates outbound sends
+        mcp_servers=_servers(),
+        permission_mode="default",       # so can_use_tool is actually invoked
         can_use_tool=_can_use_tool,
+        max_turns=15,                     # cap the agent loop (runaway-cost guard)
     )
-    out: list[str] = []
+    if _session_id:
+        kwargs["resume"] = _session_id   # continue the same conversation
+    options = ClaudeAgentOptions(**kwargs)
+
+    parts: list[str] = []
     async for message in query(prompt=prompt, options=options):
-        text = getattr(message, "text", None) or getattr(message, "content", None)
-        if isinstance(text, str):
-            out.append(text)
-    return "".join(out).strip()
+        if isinstance(message, AssistantMessage):
+            for block in message.content:
+                if isinstance(block, TextBlock):
+                    parts.append(block.text)
+        elif isinstance(message, ResultMessage):
+            _session_id = getattr(message, "session_id", None) or _session_id
+    return "".join(parts).strip()
 
 
 async def run_turn(user_text: str) -> str:
-    """Run one turn. Sonnet by default; Opus for heavy work or on self-escalation."""
+    """Sonnet by default; Opus for heavy work or when Sonnet escalates itself.
+
+    NOTE: the escalation triage shares the session, so the brief 'ESCALATE:' turn
+    lands in history. Fine for a scaffold; a tool-based handoff would be cleaner.
+    """
     model = choose_model(user_text)
 
-    # Borderline turn: let Sonnet decide if it needs Opus.
     if model == config.MODEL_FAST and config.MODEL_HEAVY != config.MODEL_FAST:
-        reply = await _run(user_text, config.MODEL_FAST, allow_escalate=True)
+        reply = await _ask(user_text, config.MODEL_FAST, allow_escalate=True)
         if reply.upper().startswith("ESCALATE:"):
             reason = reply.split(":", 1)[1].strip()
             print(f"[router] Sonnet -> Opus  ({reason})")
-            return await _run(user_text, config.MODEL_HEAVY, allow_escalate=False)
+            return await _ask(user_text, config.MODEL_HEAVY, allow_escalate=False)
         return reply
 
-    return await _run(user_text, model, allow_escalate=False)
+    return await _ask(user_text, model, allow_escalate=False)

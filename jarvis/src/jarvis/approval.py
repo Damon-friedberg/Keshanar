@@ -1,8 +1,12 @@
-"""The one hard gate: nothing gets SENT to anyone without approval.
+"""Gates that run OUTSIDE the model's control (platform-layer, per production
+postmortems — models talk their way past prompt-only rules):
 
-Everything else runs without prompting (looser / full-control posture).
-Widen or narrow the patterns below to taste.
+1. Outbound sends (message/email/post/DM) -> always ask. (Your one hard gate.)
+2. Catastrophic commands (rm -rf ~, format, DROP DATABASE, git push --force...)
+   -> ask. This protects your machine from the AGENT'S mistakes, not from
+   attackers; toggle off with JARVIS_GUARD_DESTRUCTIVE=0 if you want it fully loose.
 """
+import os
 import re
 
 # Tool-name fragments that mean "this leaves the machine toward a person".
@@ -22,6 +26,28 @@ def requires_approval(tool_name: str, tool_input: dict | None = None) -> bool:
     if _SAFE.search(name) and not re.search(r"send|post|publish", name):
         return False
     return bool(_OUTBOUND_RE.search(name))
+
+
+_GUARD = os.getenv("JARVIS_GUARD_DESTRUCTIVE", "1") != "0"
+_DESTRUCTIVE = re.compile(
+    r"""rm\s+-rf?\s+[~/]      # rm -rf / or ~
+      | \bdel\s+/[sfq]        # del /s /f /q
+      | \brmdir\s+/s
+      | format\s+[a-z]:       # format c:
+      | \bmkfs\b | \bdd\s+if=
+      | git\s+push\s+.*--force
+      | \bdrop\s+(table|database)\b
+      | :\(\)\s*\{            # fork bomb
+    """,
+    re.I | re.X,
+)
+
+
+def is_destructive(tool_name: str, tool_input: dict | None = None) -> bool:
+    if not _GUARD:
+        return False
+    blob = " ".join(str(v) for v in (tool_input or {}).values())
+    return bool(_DESTRUCTIVE.search(blob))
 
 
 async def confirm(tool_name: str, tool_input: dict | None = None) -> bool:
