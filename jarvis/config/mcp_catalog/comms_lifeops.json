@@ -1,0 +1,16 @@
+{
+  "_bundle": "Comms & Life-ops — messaging, notes, PM, calendar, home, media.",
+  "_warning": "Outbound 'send' tools here are gated by approval.py. Prefer official servers.",
+  "mcpServers": {
+    "slack":      { "command": "npx", "args": ["-y", "slack-mcp-server@latest"], "env": { "SLACK_MCP_XOXP_TOKEN": "${SLACK_TOKEN}" }, "_note": "korotovsky (community)." },
+    "discord":    { "command": "npx", "args": ["-y", "discord-mcp"], "env": { "DISCORD_TOKEN": "${DISCORD_TOKEN}" }, "_note": "community bot-token server." },
+    "whatsapp":   { "command": "uvx", "args": ["whatsapp-mcp"], "_note": "lharries ~5.8k; personal WhatsApp via QR. Injection-aware." },
+    "telegram":   { "command": "uvx", "args": ["telegram-mcp"], "_note": "community MTProto user API." },
+    "notion":     { "type": "http", "url": "https://mcp.notion.com/mcp", "_note": "Official (OAuth)." },
+    "linear":     { "type": "http", "url": "https://mcp.linear.app/mcp", "_note": "Official (OAuth 2.1)." },
+    "google":     { "type": "http", "url": "https://calendarmcp.googleapis.com", "_note": "Official Google Workspace (Gmail+Calendar)." },
+    "ms365":      { "command": "npx", "args": ["-y", "@softeria/ms-365-mcp-server", "--preset", "outlook"], "_note": "Outlook mail+calendar+contacts." },
+    "spotify":    { "command": "uvx", "args": ["spotify-mcp"], "_note": "marcelmarais; playback + playlists (OAuth app)." },
+    "homeassistant": { "type": "http", "url": "${HASS_URL}/mcp_server/sse", "headers": { "Authorization": "Bearer ${HASS_TOKEN}" }, "_note": "Official HA core integration." }
+  }
+}

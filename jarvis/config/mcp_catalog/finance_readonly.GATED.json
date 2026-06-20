@@ -1,0 +1,11 @@
+{
+  "_bundle": "Finance — READ-ONLY data only. DISABLED by default.",
+  "_warning": "Do NOT wire trade-execution or wallet/payment servers to an always-listening agent. These are data feeds only. To enable, load this bundle explicitly in the gateway. Never store private keys here.",
+  "_disabled": true,
+  "mcpServers": {
+    "coingecko":     { "command": "npx", "args": ["-y", "@coingecko/mcp-server"], "env": { "COINGECKO_API_KEY": "${COINGECKO_API_KEY}" }, "_note": "Official; market data only." },
+    "polygon":       { "command": "uvx", "args": ["mcp_polygon"], "env": { "POLYGON_API_KEY": "${POLYGON_API_KEY}" }, "_note": "Official; equities/options data." },
+    "openbb":        { "command": "uvx", "args": ["openbb-mcp-server"], "_note": "Open-source Bloomberg-terminal-style data." },
+    "unusual-whales":{ "command": "npx", "args": ["-y", "@unusual-whales/mcp"], "env": { "UW_API_KEY": "${UW_API_KEY}" }, "_note": "Options flow / intel (read)." }
+  }
+}

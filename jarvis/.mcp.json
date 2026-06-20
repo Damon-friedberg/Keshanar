@@ -1,0 +1,70 @@
+{
+  "mcpServers": {
+    "desktop-commander": {
+      "command": "npx",
+      "args": ["-y", "@wonderwhy-er/desktop-commander"]
+    },
+    "terminator": {
+      "command": "npx",
+      "args": ["-y", "terminator-mcp-agent@latest"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from", "git+https://github.com/oraios/serena",
+        "serena-mcp-server", "--context", "ide-assistant"
+      ]
+    },
+    "composio": {
+      "command": "npx",
+      "args": ["-y", "@composio/mcp@latest"],
+      "env": { "COMPOSIO_API_KEY": "${COMPOSIO_API_KEY}" },
+      "_todo": "Run the Composio CLI once to connect your apps and (optionally) swap this for the generated hosted URL."
+    },
+    "exa": {
+      "type": "http",
+      "url": "https://mcp.exa.ai/mcp",
+      "headers": { "x-api-key": "${EXA_API_KEY}" }
+    },
+    "firecrawl": {
+      "command": "npx",
+      "args": ["-y", "firecrawl-mcp"],
+      "env": { "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}" }
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": { "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}" }
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": { "Authorization": "Bearer ${GITHUB_TOKEN}" }
+    },
+    "graphiti": {
+      "command": "uvx",
+      "args": ["graphiti-mcp"],
+      "env": {
+        "NEO4J_URI": "${NEO4J_URI}",
+        "NEO4J_USER": "${NEO4J_USER}",
+        "NEO4J_PASSWORD": "${NEO4J_PASSWORD}",
+        "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}"
+      },
+      "_todo": "Heavy: needs a running Neo4j (docker run neo4j). Swap for basic-memory if you want zero infra."
+    },
+    "screenpipe": {
+      "command": "npx",
+      "args": ["-y", "screenpipe-mcp@latest"],
+      "env": { "SCREENPIPE_URL": "${SCREENPIPE_URL}" },
+      "_todo": "Install + run the Screenpipe recorder separately; this server just queries its history."
+    }
+  }
+}

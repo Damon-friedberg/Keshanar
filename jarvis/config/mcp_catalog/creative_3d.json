@@ -1,0 +1,13 @@
+{
+  "_bundle": "Creative & 3D — load when designing, modeling, or making media.",
+  "mcpServers": {
+    "blender":   { "command": "uvx", "args": ["blender-mcp"], "_note": "ahujasid/blender-mcp ~23k stars; also an official Anthropic connector." },
+    "unity":     { "command": "npx", "args": ["-y", "unity-mcp-cli"], "_note": "CoplayDev/unity-mcp ~11k stars; needs the Unity editor package." },
+    "unreal":    { "command": "uvx", "args": ["unreal-mcp"], "_note": "chongdashu/unreal-mcp — experimental; UE plugin required." },
+    "ableton":   { "command": "uvx", "args": ["ableton-mcp"], "_note": "ahujasid/ableton-mcp; install the Ableton Remote Script." },
+    "figma":     { "type": "http", "url": "https://mcp.figma.com/mcp", "_note": "Official Figma Dev Mode MCP (OAuth)." },
+    "elevenlabs":{ "command": "uvx", "args": ["elevenlabs-mcp"], "env": { "ELEVENLABS_API_KEY": "${ELEVENLABS_API_KEY}" }, "_note": "Official; TTS / voice clone / sound fx." },
+    "replicate": { "type": "http", "url": "https://mcp.replicate.com/sse", "_note": "Official remote; thousands of image/video/audio models." },
+    "magic-ui":  { "command": "npx", "args": ["-y", "@21st-dev/magic@latest"], "_note": "21st.dev Magic — generate React UI components." }
+  }
+}

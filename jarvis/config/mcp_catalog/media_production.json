@@ -1,0 +1,11 @@
+{
+  "_bundle": "Media production — video/audio generation and editing.",
+  "mcpServers": {
+    "davinci":   { "command": "npx", "args": ["-y", "davinci-resolve-mcp", "setup"], "_note": "samuelgursky; drives DaVinci Resolve." },
+    "reaper":    { "command": "uvx", "args": ["reaper-mcp-server"], "_note": "drive the REAPER DAW (compose/mix)." },
+    "heygen":    { "type": "http", "url": "https://mcp.heygen.com/mcp/v1/", "_note": "Official; AI avatar talking-head video." },
+    "runway":    { "type": "http", "url": "https://mcp.runwayml.com", "_note": "Official; text/image-to-video." },
+    "minimax":   { "command": "uvx", "args": ["minimax-mcp"], "env": { "MINIMAX_API_KEY": "${MINIMAX_API_KEY}" }, "_note": "TTS, voice clone, video + image gen." },
+    "short-video": { "command": "npx", "args": ["-y", "short-video-maker"], "env": { "PEXELS_API_KEY": "${PEXELS_API_KEY}" }, "_note": "auto TikTok/Reels/Shorts." }
+  }
+}

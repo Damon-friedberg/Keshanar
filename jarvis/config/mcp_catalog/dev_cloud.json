@@ -1,0 +1,12 @@
+{
+  "_bundle": "Dev & Cloud — load when shipping code or running infra.",
+  "mcpServers": {
+    "supabase":  { "command": "npx", "args": ["-y", "@supabase/mcp-server-supabase@latest", "--read-only"], "env": { "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}" }, "_note": "Official; --read-only for safety." },
+    "cloudflare":{ "command": "npx", "args": ["-y", "@cloudflare/mcp-server-cloudflare"], "_note": "Official; 13 domain servers (Workers, D1, R2, DNS...)." },
+    "vercel":    { "type": "http", "url": "https://mcp.vercel.com", "_note": "Official remote (OAuth)." },
+    "neon":      { "type": "http", "url": "https://mcp.neon.tech/sse", "_note": "Official serverless Postgres." },
+    "mongodb":   { "command": "npx", "args": ["-y", "mongodb-mcp-server@latest", "--readOnly"], "env": { "MDB_MCP_CONNECTION_STRING": "${MONGODB_URI}" }, "_note": "Official." },
+    "e2b":       { "command": "npx", "args": ["-y", "@e2b/mcp-server"], "env": { "E2B_API_KEY": "${E2B_API_KEY}" }, "_note": "Run code in a real isolated cloud sandbox." },
+    "daytona":   { "command": "daytona", "args": ["mcp", "start"], "_note": "Official; create/operate cloud dev sandboxes." }
+  }
+}

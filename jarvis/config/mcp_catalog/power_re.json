@@ -1,0 +1,12 @@
+{
+  "_bundle": "Power & reverse-engineering — for YOUR OWN binaries, debugging, security.",
+  "_warning": "Use on software you own or are authorized to analyze.",
+  "mcpServers": {
+    "ghidra":        { "command": "uvx", "args": ["ghidra-mcp"], "_note": "LaurieWired/bethington — decompile binaries (free)." },
+    "ida-pro":       { "command": "uvx", "args": ["idalib-mcp", "--stdio"], "_note": "mrexodia/ida-pro-mcp ~9.5k; needs IDA license." },
+    "frida":         { "command": "uvx", "args": ["frida-mcp"], "_note": "hook/instrument a live running app." },
+    "chrome-devtools": { "command": "npx", "args": ["-y", "chrome-devtools-mcp@latest"], "_note": "Google official; deep live-Chrome inspection." },
+    "browser-use":   { "command": "uvx", "args": ["--from", "browser-use[cli]", "browser-use", "--mcp"], "_note": "~100k stars; natural-language browser agent." },
+    "wireshark":     { "command": "uvx", "args": ["mcp-wireshark"], "_note": "live packet capture/analysis via tshark." }
+  }
+}

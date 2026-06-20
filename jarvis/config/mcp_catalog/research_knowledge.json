@@ -1,0 +1,12 @@
+{
+  "_bundle": "Research & Knowledge — load for deep research, data, math.",
+  "mcpServers": {
+    "tavily":     { "type": "http", "url": "https://mcp.tavily.com/mcp/?tavilyApiKey=${TAVILY_API_KEY}", "_note": "Free 1k credits/mo; search + extract + crawl." },
+    "perplexity": { "command": "npx", "args": ["-y", "@perplexity-ai/mcp-server"], "env": { "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}" }, "_note": "Official Sonar search/research." },
+    "apify":      { "type": "http", "url": "https://mcp.apify.com", "_note": "Official; thousands of Actors/scrapers (OAuth)." },
+    "wolfram":    { "command": "uvx", "args": ["wolfram-mcp"], "_note": "Exact symbolic math / real computation (needs Wolfram Engine)." },
+    "jupyter":    { "command": "uvx", "args": ["jupyter-mcp-server"], "_note": "datalayer; live Python kernel with plots." },
+    "elicit":     { "type": "http", "url": "https://elicit.com/api/mcp", "_note": "Automated literature review across 138M+ papers." },
+    "basic-memory": { "command": "uvx", "args": ["basic-memory", "mcp"], "_note": "Zero-infra local Markdown memory (alt to Graphiti)." }
+  }
+}
