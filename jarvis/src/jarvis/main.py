@@ -6,13 +6,25 @@ Run:  py -m jarvis.main
 Open the orb separately: ui/orb/index.html
 """
 import asyncio
+import re
 
-from . import capture, config, hud, profile, vision, voice
+from . import capture, config, context, hud, profile, vision, voice
 from .agent import run_turn
 
-# phrases that mean "learn something durable about me"
+_SWITCH = re.compile(r"^(?:switch to|work on|working on|focus on|context)\s+(.+)$", re.I)
+_LINK = re.compile(r"^link(?:\s+this)?(?:\s+to)?\s+(.+)$", re.I)
+# phrases that mean "learn something durable"
 _LEARN = ("remember", "i prefer", "from now on", "call me", "note about me",
           "i like", "i don't like", "i hate", "my name is", "fyi")
+
+
+def _classify_link(v: str):
+    v = v.strip().strip('"').strip("'")
+    if v.lower().startswith(("http://", "https://")):
+        return "cowork", v
+    if v.startswith(("~", "/", ".")) or re.match(r"^[a-zA-Z]:[\\/]", v) or "\\" in v or "/" in v:
+        return "code", v
+    return "note", v
 
 # phrases that start a multi-step "walk me through it" capture
 _SESSION = ("start capture", "capture session", "capture mode")
@@ -62,6 +74,22 @@ async def loop() -> None:
             hud.set_state("speaking")
             voice.speak("Goodbye.")
             return
+        msw = _SWITCH.match(user_text.strip())
+        if msw:
+            slug = context.switch(msw.group(1))
+            hud.set_state("speaking")
+            voice.speak("Back to personal." if slug == context.GENERAL
+                        else f"Now working on {msw.group(1).strip()}.")
+            continue
+        mlk = _LINK.match(user_text.strip())
+        if mlk:
+            if context.active() == context.GENERAL:
+                voice.speak("Switch to a customer first, then link it.")
+                continue
+            kind, val = _classify_link(mlk.group(1))
+            context.set_link(kind, val)
+            voice.speak(f"Linked this customer's {kind}.")
+            continue
         if any(k in low for k in _SESSION):
             await _capture_session()
             continue
@@ -74,10 +102,11 @@ async def loop() -> None:
 
         print(f"you> {user_text}")
         if any(k in low for k in _LEARN):
+            learner = context.learn if context.active() != context.GENERAL else profile.learn
             try:
-                profile.learn(user_text)          # adapt to you, then answer
+                learner(user_text)                # adapt (to this customer, or to you)
             except Exception as e:                # noqa: BLE001
-                print(f"[profile] learn skipped ({e})")
+                print(f"[learn] skipped ({e})")
         hud.set_state("thinking")
         reply = await run_turn(user_text)
         print(f"jarvis> {reply}")

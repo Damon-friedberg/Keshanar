@@ -23,12 +23,9 @@ from claude_agent_sdk import (  # type: ignore
     query,
 )
 
-from . import config, profile
+from . import config, context, profile
 from .approval import confirm, is_destructive, requires_approval
 from .router import choose_model
-
-# Server-side conversation handle; lets each turn continue the same session.
-_session_id: str | None = None
 
 _ESCALATE_HINT = (
     "\n\nESCALATION: If this needs deep reasoning (hard coding, multi-step "
@@ -53,18 +50,22 @@ async def _can_use_tool(tool_name: str, input_data: dict, context=None):
 
 
 async def _ask(prompt: str, model: str, allow_escalate: bool) -> str:
-    global _session_id
+    sid = context.session_get()          # conversation is scoped per customer
     kwargs = dict(
         model=model,
-        system_prompt=(config.SYSTEM_PROMPT + profile.prompt()
+        system_prompt=(config.SYSTEM_PROMPT + profile.prompt() + context.prompt()
                        + (_ESCALATE_HINT if allow_escalate else "")),
         mcp_servers=_servers(),
         permission_mode="default",       # so can_use_tool is actually invoked
         can_use_tool=_can_use_tool,
         max_turns=15,                     # cap the agent loop (runaway-cost guard)
     )
-    if _session_id:
-        kwargs["resume"] = _session_id   # continue the same conversation
+    if sid:
+        kwargs["resume"] = sid           # continue THIS customer's conversation
+    code = context.code_path()           # if linked to a Claude Code project,
+    if code:                             # run INSIDE it (its files, CLAUDE.md, MCP)
+        kwargs["cwd"] = code
+        kwargs["setting_sources"] = ["project"]
     options = ClaudeAgentOptions(**kwargs)
 
     parts: list[str] = []
@@ -74,7 +75,7 @@ async def _ask(prompt: str, model: str, allow_escalate: bool) -> str:
                 if isinstance(block, TextBlock):
                     parts.append(block.text)
         elif isinstance(message, ResultMessage):
-            _session_id = getattr(message, "session_id", None) or _session_id
+            context.session_set(getattr(message, "session_id", None))
     return "".join(parts).strip()
 
 

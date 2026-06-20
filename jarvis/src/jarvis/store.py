@@ -1,17 +1,15 @@
-"""The vault: where captured tasks / to-dos / knowledge land (local-first).
+"""The vault: captured tasks / to-dos / knowledge, isolated PER ACTIVE CONTEXT.
 
-Obsidian-native so it's actually retrievable later (lessons from PKM/capture
-tools): YAML frontmatter, [[wikilinks]] to customers/projects, Obsidian-Tasks
-date/priority syntax, and a ^block-id per item for IDEMPOTENT DEDUP — re-capturing
-the same task won't append it twice.
+Tasks/todos/knowledge land in the active customer's workspace (or the general
+vault) so projects never cross-contaminate. The customers/ registry stays global.
+Obsidian-native (frontmatter, [[wikilinks]], Tasks dates) + idempotent dedup.
 """
 import hashlib
 import re
 from datetime import date, datetime
 
-from . import config
+from . import context
 
-VAULT = config.ROOT / "vault"
 _PRI = {"high": "🔼", "med": "", "low": "🔽"}
 
 
@@ -33,24 +31,28 @@ def _link(name: str | None) -> str:
 
 
 def _read(rel: str) -> str:
-    p = VAULT / rel
+    p = context.workspace() / rel               # active context workspace
     return p.read_text(encoding="utf-8") if p.exists() else ""
 
 
 def _append(rel: str, text: str) -> None:
-    p = VAULT / rel
+    p = context.workspace() / rel
     p.parent.mkdir(parents=True, exist_ok=True)
     with p.open("a", encoding="utf-8") as f:
         f.write(text)
 
 
 def _touch_customer(name: str, detail: str | None = None) -> None:
-    rel = f"customers/{_slug(name)}.md"
-    if not (VAULT / rel).exists():
-        _append(rel, f"---\ntype: customer\nname: {name}\ntags: [customer]\n"
-                     f"created: {date.today().isoformat()}\n---\n# {name}\n\n## Details\n")
-    if detail and _norm(detail) not in _norm(_read(rel)):
-        _append(rel, f"- {datetime.now():%Y-%m-%d %H:%M}: {detail}\n")
+    # The customers/ registry is GLOBAL (not per-workspace).
+    p = context.VAULT / "customers" / f"{_slug(name)}.md"
+    if not p.exists():
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f"---\ntype: customer\nname: {name}\ntags: [customer]\n"
+                     f"created: {date.today().isoformat()}\n---\n# {name}\n\n## Details\n",
+                     encoding="utf-8")
+    if detail and _norm(detail) not in _norm(p.read_text(encoding="utf-8")):
+        with p.open("a", encoding="utf-8") as f:
+            f.write(f"- {datetime.now():%Y-%m-%d %H:%M}: {detail}\n")
 
 
 def save(data: dict) -> None:
@@ -83,7 +85,7 @@ def save(data: dict) -> None:
 
     for k in data.get("knowledge", []):
         rel = f"knowledge/{_slug(k.get('topic'))}.md"
-        if not (VAULT / rel).exists():
+        if not (context.workspace() / rel).exists():
             cust = f'\ncustomer: "{_link(k["customer"])}"' if k.get("customer") else ""
             _append(rel, f"---\ntype: knowledge\ntopic: {k.get('topic', 'note')}\n"
                          f"tags: [knowledge]\nsource: capture\ncreated: {date.today().isoformat()}{cust}\n---\n")

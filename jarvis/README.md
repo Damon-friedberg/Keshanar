@@ -105,6 +105,27 @@ Everything lands locally in `vault/`: `tasks.md`, `todos.md`, `customers.md`, an
 `knowledge/<topic>.md`. Nothing is sent anywhere. (Optional next step: push these
 into Graphiti memory or Notion via the agent.)
 
+## One project at a time — zero cross-contamination
+
+You run many projects; their worlds must never bleed together. Each customer gets
+an **isolated workspace** (`vault/customers/<name>/`) with its own tasks, knowledge,
+communication style, **conversation thread**, and memory namespace. Only the
+**active** context is ever loaded into a turn.
+
+- **Switch:** *"work on Acme"* / *"switch to Beta"* → from then on, tasks, captures,
+  learning, and the conversation are scoped to that customer. *"switch to personal"*
+  resets. Each customer keeps its own dialogue thread, so Jarvis never references
+  Beta while you're on Acme.
+- **Per-customer comms:** while on a customer, *"remember to always be formal with
+  them and sign as Damon"* updates **that customer's** profile (tone, formality,
+  signature, channel) — not your personal one. Jarvis then communicates in their
+  custom style.
+- **Link it to the real work:** *"link this to C:\\dev\\acme-site"* binds the
+  context to a **local Claude Code project** — Jarvis then runs **inside** that
+  folder (its files, `CLAUDE.md`, and MCP servers), so the chat is tied to the
+  actual codebase. *"link this to https://claude.ai/project/…"* records the
+  **cowork / web** project so it knows where the canonical conversation lives.
+
 ## Learns you & adapts
 
 Jarvis gets to know you and tailors itself over time — two tiers:
