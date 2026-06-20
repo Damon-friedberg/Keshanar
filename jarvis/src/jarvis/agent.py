@@ -49,13 +49,13 @@ async def _can_use_tool(tool_name: str, input_data: dict, context=None):
     return PermissionResultAllow()
 
 
-async def _ask(prompt: str, model: str, allow_escalate: bool) -> str:
+async def _ask(prompt: str, model: str, allow_escalate: bool, bare: bool = False) -> str:
     sid = context.session_get()          # conversation is scoped per customer
     kwargs = dict(
         model=model,
         system_prompt=(config.SYSTEM_PROMPT + profile.prompt() + context.prompt()
                        + (_ESCALATE_HINT if allow_escalate else "")),
-        mcp_servers=_servers(),
+        mcp_servers=({} if bare else _servers()),
         permission_mode="default",       # so can_use_tool is actually invoked
         can_use_tool=_can_use_tool,
         max_turns=15,                     # cap the agent loop (runaway-cost guard)
@@ -79,20 +79,21 @@ async def _ask(prompt: str, model: str, allow_escalate: bool) -> str:
     return "".join(parts).strip()
 
 
-async def run_turn(user_text: str) -> str:
+async def run_turn(user_text: str, bare: bool = False) -> str:
     """Sonnet by default; Opus for heavy work or when Sonnet escalates itself.
 
+    bare=True runs the model with NO MCP servers (for the text-mode smoke test).
     NOTE: the escalation triage shares the session, so the brief 'ESCALATE:' turn
     lands in history. Fine for a scaffold; a tool-based handoff would be cleaner.
     """
     model = choose_model(user_text)
 
     if model == config.MODEL_FAST and config.MODEL_HEAVY != config.MODEL_FAST:
-        reply = await _ask(user_text, config.MODEL_FAST, allow_escalate=True)
+        reply = await _ask(user_text, config.MODEL_FAST, allow_escalate=True, bare=bare)
         if reply.upper().startswith("ESCALATE:"):
             reason = reply.split(":", 1)[1].strip()
             print(f"[router] Sonnet -> Opus  ({reason})")
-            return await _ask(user_text, config.MODEL_HEAVY, allow_escalate=False)
+            return await _ask(user_text, config.MODEL_HEAVY, allow_escalate=False, bare=bare)
         return reply
 
-    return await _ask(user_text, model, allow_escalate=False)
+    return await _ask(user_text, model, allow_escalate=False, bare=bare)

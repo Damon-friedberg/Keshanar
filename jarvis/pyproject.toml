@@ -5,6 +5,11 @@ description = "A Claude-powered voice assistant for Windows (voice + MCP + compu
 requires-python = ">=3.11"
 dynamic = ["dependencies"]
 
+[project.scripts]
+jarvis = "jarvis.main:main"
+jarvis-chat = "jarvis.chat:main"
+jarvis-doctor = "jarvis.doctor:main"
+
 [tool.setuptools]
 package-dir = { "" = "src" }
 

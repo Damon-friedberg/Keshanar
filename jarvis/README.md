@@ -72,6 +72,20 @@ py -m jarvis.main
 start ui\orb\index.html
 ```
 
+## Prove it works (do this first)
+
+```powershell
+py -m jarvis.doctor          # what's missing: keys, CLIs, audio, packages, MCP
+py -m jarvis.doctor --ping   # also do a live model call to verify your key + model id
+py -m jarvis.chat            # TEXT mode, model only — no mic/voice needed
+py -m jarvis.chat --tools    # text mode WITH the MCP tools enabled
+```
+
+Climb the ladder: prove `API key -> Sonnet -> reply` first (`chat`), then add
+`--tools` to prove MCP, then run the voice app (`py -m jarvis.main`). This is the
+fastest way to find what actually breaks on your machine — tell me the output and
+we fix from there.
+
 ## Use these MCPs in Claude Code too
 
 Jarvis and Claude Code share the exact same tool loadout.
