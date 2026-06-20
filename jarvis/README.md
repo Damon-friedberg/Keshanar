@@ -64,8 +64,12 @@ pip install -r requirements.txt
 # 3. Keys
 copy .env.example .env   # then fill in ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, etc.
 
-# 4. Run
+# 4. Preflight, then run
+py -m jarvis.doctor        # checks keys, CLIs, MCP config
 py -m jarvis.main
+
+# 5. (optional) open the orb HUD in a browser
+start ui\orb\index.html
 ```
 
 ## Use these MCPs in Claude Code too

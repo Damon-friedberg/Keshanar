@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JARVIS</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #04060a; overflow: hidden;
+    font-family: "Segoe UI", system-ui, sans-serif; cursor: none; }
+  #c { display: block; width: 100vw; height: 100vh; }
+  #label { position: fixed; left: 0; right: 0; bottom: 7vh; text-align: center;
+    color: #cfe9ff; letter-spacing: .35em; text-transform: uppercase;
+    font-size: 13px; opacity: .65; transition: opacity .4s; }
+  #conn { position: fixed; top: 14px; right: 16px; font-size: 11px;
+    letter-spacing: .2em; color: #2b6; opacity: .5; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="label">idle</div>
+<div id="conn">●</div>
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+const label = document.getElementById("label");
+const conn = document.getElementById("conn");
+
+// state color palettes  {core, glow, ring}
+const PALETTE = {
+  idle:      { core: [ 90, 210, 220], glow: [ 12, 90, 110], ring: [ 70, 180, 200] },
+  listening: { core: [ 80, 230, 140], glow: [ 16, 120,  70], ring: [ 90, 230, 150] },
+  thinking:  { core: [170, 140, 250], glow: [ 80,  50, 150], ring: [150, 120, 240] },
+  speaking:  { core: [ 90, 175, 255], glow: [ 30,  90, 220], ring: [110, 180, 255] },
+};
+
+let target = { ...PALETTE.idle };
+let cur = { core: [...target.core], glow: [...target.glow], ring: [...target.ring] };
+let state = "idle";
+let level = 0;          // 0..1 audio level (target)
+let levelSmooth = 0;
+let t = 0;
+
+// orbiting particles
+const N = 90;
+const parts = Array.from({ length: N }, () => ({
+  a: Math.random() * Math.PI * 2,
+  r: 0.9 + Math.random() * 0.9,      // ring radius factor
+  s: 0.2 + Math.random() * 0.8,      // speed
+  z: 0.4 + Math.random() * 0.6,      // brightness
+}));
+
+function lerp(a, b, k) { return a + (b - a) * k; }
+function lerpArr(a, b, k) { return a.map((v, i) => lerp(v, b[i], k)); }
+function rgba(c, al) { return `rgba(${c[0]|0},${c[1]|0},${c[2]|0},${al})`; }
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = innerWidth * dpr;
+  canvas.height = innerHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener("resize", resize);
+resize();
+
+function setState(s, lv) {
+  if (PALETTE[s]) { state = s; target = PALETTE[s]; label.textContent = s; }
+  if (typeof lv === "number") level = Math.max(0, Math.min(1, lv));
+}
+
+function frame() {
+  t += 0.016;
+  // ease colors + level
+  cur.core = lerpArr(cur.core, target.core, 0.05);
+  cur.glow = lerpArr(cur.glow, target.glow, 0.05);
+  cur.ring = lerpArr(cur.ring, target.ring, 0.05);
+  // idle breathing adds a little life even with no audio
+  const ambient = state === "speaking" ? 0 : 0.06 * (0.5 + 0.5 * Math.sin(t * 1.3));
+  levelSmooth = lerp(levelSmooth, level + ambient, 0.15);
+
+  const w = innerWidth, h = innerHeight;
+  const cx = w / 2, cy = h / 2;
+  const base = Math.min(w, h) * 0.15;
+  const pulse = base * (1 + 0.05 * Math.sin(t * 2) + 0.30 * levelSmooth);
+
+  // fade trails
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "rgba(4,6,10,0.30)";
+  ctx.fillRect(0, 0, w, h);
+  ctx.globalCompositeOperation = "lighter";
+
+  // outer glow halo
+  let g = ctx.createRadialGradient(cx, cy, pulse * 0.2, cx, cy, pulse * 4.2);
+  g.addColorStop(0, rgba(cur.glow, 0.55));
+  g.addColorStop(0.4, rgba(cur.glow, 0.12));
+  g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+
+  // rotating HUD rings (more active while thinking)
+  const rings = state === "thinking" ? 3 : 1;
+  for (let i = 0; i < rings; i++) {
+    const rr = pulse * (1.9 + i * 0.35);
+    const span = Math.PI * (0.5 + 0.4 * i);
+    const off = t * (0.6 + i * 0.5) * (i % 2 ? -1 : 1);
+    ctx.beginPath();
+    ctx.arc(cx, cy, rr, off, off + span);
+    ctx.strokeStyle = rgba(cur.ring, 0.35 - i * 0.08);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // orbiting particles
+  for (const p of parts) {
+    p.a += 0.004 * p.s * (1 + levelSmooth * 2);
+    const rr = pulse * (1.35 + p.r * 0.6);
+    const px = cx + Math.cos(p.a) * rr;
+    const py = cy + Math.sin(p.a) * rr * 0.62;   // slight vertical squash
+    const size = 1 + p.z * 2 * (0.6 + levelSmooth);
+    ctx.beginPath();
+    ctx.arc(px, py, size, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(cur.ring, 0.5 * p.z);
+    ctx.fill();
+  }
+
+  // core orb
+  g = ctx.createRadialGradient(cx, cy, 0, cx, cy, pulse);
+  g.addColorStop(0, rgba(cur.core, 0.95));
+  g.addColorStop(0.55, rgba(cur.core, 0.55));
+  g.addColorStop(1, rgba(cur.glow, 0.0));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(cx, cy, pulse, 0, Math.PI * 2);
+  ctx.fill();
+
+  // bright center
+  ctx.fillStyle = rgba([255, 255, 255], 0.85 * (0.5 + levelSmooth));
+  ctx.beginPath();
+  ctx.arc(cx, cy, pulse * 0.18, 0, Math.PI * 2);
+  ctx.fill();
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// ---- live state from the backend (ws://localhost:8765) ----
+let demo = true;
+function connect() {
+  let ws;
+  try { ws = new WebSocket("ws://localhost:8765"); }
+  catch { return setTimeout(connect, 1500); }
+  ws.onopen = () => { demo = false; conn.style.color = "#2b6"; conn.style.opacity = .5; };
+  ws.onmessage = (e) => {
+    try { const d = JSON.parse(e.data); setState(d.state, d.level); } catch {}
+  };
+  ws.onclose = () => { demo = true; conn.style.color = "#b55"; setTimeout(connect, 1500); };
+  ws.onerror = () => { try { ws.close(); } catch {} };
+}
+connect();
+
+// demo cycle so it looks alive before the backend connects
+const cycle = ["idle", "listening", "thinking", "speaking"];
+let ci = 0;
+setInterval(() => {
+  if (!demo) return;
+  ci = (ci + 1) % cycle.length;
+  setState(cycle[ci], cycle[ci] === "speaking" ? 0.6 : cycle[ci] === "listening" ? 0.4 : 0.1);
+}, 2600);
+</script>
+</body>
+</html>

@@ -11,3 +11,6 @@ numpy>=1.26
 # TTS (ElevenLabs cloud; pyttsx3 is the offline fallback)
 elevenlabs>=1.0.0
 pyttsx3>=2.90
+
+# Orb HUD bridge (optional)
+websockets>=12.0

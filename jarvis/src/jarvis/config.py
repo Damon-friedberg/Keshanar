@@ -14,8 +14,9 @@ BRIEFING_FILE = ROOT / "briefing.md"
 
 # Model routing — set the exact IDs in .env (current Sonnet / Opus 4.x).
 MODEL_FAST = os.getenv("JARVIS_MODEL_FAST", "claude-sonnet-4-x")
-# Optional. Blank => Sonnet-only (you ask Claude Code + Opus directly for deep work).
-MODEL_HEAVY = os.getenv("JARVIS_MODEL_HEAVY") or MODEL_FAST
+# Heavy model for hard work. Jarvis auto-routes here for obviously-heavy turns
+# AND can escalate itself mid-task. Set blank in .env to force Sonnet-only.
+MODEL_HEAVY = os.getenv("JARVIS_MODEL_HEAVY", "claude-opus-4-x") or MODEL_FAST
 
 WAKE_MODE = os.getenv("JARVIS_WAKE", "double_clap")
 
