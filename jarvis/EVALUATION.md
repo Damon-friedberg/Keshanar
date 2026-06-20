@@ -17,7 +17,7 @@ Windows hardware yet.** That gap is the whole story.
 | Orb HUD | 8 | Real, dependency-free, reactive to live state; looks good. Not yet the 3D particle version; `level` not yet fed from audio. |
 | Security / safety | 5 | Matches the requested "looser" posture with an outbound-send gate — but full computer control + always-listening is a **large prompt-injection blast radius**, and only sends are gated. Deliberate, but it's the biggest real risk. |
 | Setup & DX | 7 | `doctor.py`, Claude Code setup scripts, `.env.example`, clear README. No installer; first-run will still have rough edges. |
-| Verification / reliability | 3 | **Nothing has been run.** SDK API names assumed; no tests; long-tail catalog largely unverified. |
+| Verification / reliability | 5 | Every module imports against the *real* `claude-agent-sdk` (SDK API confirmed correct); deterministic core (routing, send/destructive gates, context isolation+linking, dedup) has a passing `pytest` suite. Not yet run live (needs your API key) or on voice/screen hardware. |
 
 **Overall: 7/10 as a scaffold** — excellent bones, fast path to a real demo,
 but it's a blueprint with stubs, not a proven app. The 7 reflects design quality;
