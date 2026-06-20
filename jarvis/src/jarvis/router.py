@@ -14,8 +14,12 @@ _HEAVY = re.compile(
 
 
 def choose_model(text: str) -> str:
-    """Pick the model for this turn. Long or 'heavy' prompts go to Opus."""
+    """Pick the model for this turn.
+
+    Sonnet-only by default. If you set a distinct JARVIS_MODEL_HEAVY (e.g. Opus),
+    heavy/long prompts route to it; otherwise everything stays on Sonnet.
+    """
     text = text or ""
-    if _HEAVY.search(text) or len(text) > 600:
+    if config.MODEL_HEAVY != config.MODEL_FAST and (_HEAVY.search(text) or len(text) > 600):
         return config.MODEL_HEAVY
     return config.MODEL_FAST

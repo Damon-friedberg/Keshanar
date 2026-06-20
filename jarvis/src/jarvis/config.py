@@ -14,7 +14,8 @@ BRIEFING_FILE = ROOT / "briefing.md"
 
 # Model routing — set the exact IDs in .env (current Sonnet / Opus 4.x).
 MODEL_FAST = os.getenv("JARVIS_MODEL_FAST", "claude-sonnet-4-x")
-MODEL_HEAVY = os.getenv("JARVIS_MODEL_HEAVY", "claude-opus-4-x")
+# Optional. Blank => Sonnet-only (you ask Claude Code + Opus directly for deep work).
+MODEL_HEAVY = os.getenv("JARVIS_MODEL_HEAVY") or MODEL_FAST
 
 WAKE_MODE = os.getenv("JARVIS_WAKE", "double_clap")
 

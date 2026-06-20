@@ -68,6 +68,25 @@ copy .env.example .env   # then fill in ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, e
 py -m jarvis.main
 ```
 
+## Use these MCPs in Claude Code too
+
+Jarvis and Claude Code share the exact same tool loadout.
+
+- **Quickest:** run Claude Code from the `jarvis/` folder — it auto-loads
+  `.mcp.json` (project scope), so the core 12 are instantly available.
+- **Everywhere:** register them at user scope so *every* Claude Code session has
+  them:
+  ```powershell
+  .\scripts\setup_claude_code.ps1     # adds the core to Claude Code (user scope)
+  claude mcp list                     # verify
+  ```
+- **The full catalog too:** add the gateway as ONE entry so Claude Code reaches
+  every bundle without tool-bloat — see `config/GATEWAY.md`.
+
+> Adding all ~50 catalog servers directly to Claude Code bloats it the same way
+> it would bloat Jarvis. **Core direct + catalog-via-gateway** is the sane setup
+> for both.
+
 ## Overnight briefing
 
 `briefing.py` is meant to be run unattended (Claude Code Routines in the cloud,
