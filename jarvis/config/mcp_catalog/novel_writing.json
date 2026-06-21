@@ -1,0 +1,51 @@
+{
+  "_bundle": "Novel writing & editing at a high level — continuity, story bible, track-changes, read-back, research.",
+  "_setup": "Graphiti + Exa are already in the core .mcp.json. The rest are added here. See NOVELS.md for the workflow and per-tool setup (Neo4j for Graphiti, the Obsidian Local REST API plugin, API keys).",
+  "mcpServers": {
+    "graphiti": {
+      "command": "uvx",
+      "args": ["graphiti-mcp"],
+      "env": {
+        "NEO4J_URI": "${NEO4J_URI}",
+        "NEO4J_USER": "${NEO4J_USER}",
+        "NEO4J_PASSWORD": "${NEO4J_PASSWORD}",
+        "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}"
+      },
+      "_note": "Continuity engine — temporal knowledge graph (who knows what WHEN, timeline, relationships). Also in core. Needs a running Neo4j (docker run neo4j)."
+    },
+    "obsidian": {
+      "command": "uvx",
+      "args": ["mcp-obsidian"],
+      "env": { "OBSIDIAN_API_KEY": "${OBSIDIAN_API_KEY}", "OBSIDIAN_HOST": "${OBSIDIAN_HOST}" },
+      "_note": "Read/write your story bible & world wiki. Requires the Obsidian 'Local REST API' community plugin enabled in your vault."
+    },
+    "adeu": {
+      "command": "npx",
+      "args": ["-y", "@smithery/cli", "install", "adeu", "--client", "claude"],
+      "_note": "DOCX redlining as native Word tracked changes — the editor's workflow. Verify the exact Smithery package id before relying on it.",
+      "_todo": "Confirm install path via smithery.ai/registry"
+    },
+    "elevenlabs": {
+      "command": "uvx",
+      "args": ["elevenlabs-mcp"],
+      "env": { "ELEVENLABS_API_KEY": "${ELEVENLABS_API_KEY}" },
+      "_note": "Read prose aloud (hear rhythm/clunk the eye misses) + audiobook prototyping. Official."
+    },
+    "markitdown": {
+      "command": "uvx",
+      "args": ["markitdown-mcp"],
+      "_note": "Convert DOCX / Scrivener exports / PDF <-> clean markdown so AI edits the real file, then back. Microsoft."
+    },
+    "exa": {
+      "type": "http",
+      "url": "https://mcp.exa.ai/mcp",
+      "headers": { "x-api-key": "${EXA_API_KEY}" },
+      "_note": "Research at depth (historical accuracy, comps, fact-checking). Also in core."
+    },
+    "google-workspace": {
+      "command": "npx",
+      "args": ["-y", "google-workspace-mcp"],
+      "_note": "Optional — if a manuscript lives in Google Docs/Drive (co-editing with agents/editors). Community; OAuth."
+    }
+  }
+}
